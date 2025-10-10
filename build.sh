@@ -14,7 +14,7 @@ fi
 # create iso
 mkdir -p build/isodir/boot/grub
 cp build/evren.bin build/isodir/boot/evren.bin
-cp grub.cfg build/isodir/boot/grub/grub.cfg
+cp ulgen/grub.cfg build/isodir/boot/grub/grub.cfg
 grub-mkrescue -o build/evren.iso build/isodir
 
 # run in qemu
