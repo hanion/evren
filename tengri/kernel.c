@@ -2,7 +2,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* Hardware text mode color constants. */
 enum vga_color {
 	VGA_COLOR_BLACK = 0,
 	VGA_COLOR_BLUE = 1,
@@ -32,8 +31,7 @@ static inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
 
 size_t strlen(const char* str) {
 	size_t len = 0;
-	while (str[len])
-		len++;
+	while (str[len]) len++;
 	return len;
 }
 
@@ -41,14 +39,12 @@ size_t strlen(const char* str) {
 #define VGA_HEIGHT  25
 #define VGA_MEMORY  0xB8000 
 
-size_t terminal_row;
-size_t terminal_column;
-uint8_t terminal_color;
+size_t terminal_row = 0;
+size_t terminal_column = 0;
+uint8_t terminal_color = (VGA_COLOR_LIGHT_GREY | VGA_COLOR_BLACK << 4);
 uint16_t* terminal_buffer = (uint16_t*)VGA_MEMORY;
 
 void terminal_initialize(void) {
-	terminal_row = 0;
-	terminal_column = 0;
 	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 	
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
@@ -58,6 +54,21 @@ void terminal_initialize(void) {
 		}
 	}
 }
+static inline void outb(uint16_t port, uint8_t val) {
+	__asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
+}
+void terminal_set_cursor(int x, int y) {
+	uint16_t pos = y * VGA_WIDTH + x;
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (pos >> 8) & 0xFF);
+	outb(0x3D4, 0x0F);
+	outb(0x3D5, pos & 0xFF);
+}
+void terminal_update_cursor() {
+	terminal_set_cursor(terminal_column, terminal_row);
+}
+
+
 
 void terminal_setcolor(uint8_t color) {
 	terminal_color = color;
@@ -67,47 +78,46 @@ void terminal_putentryat(char c, uint8_t color, size_t x, size_t y) {
 	const size_t index = y * VGA_WIDTH + x;
 	terminal_buffer[index] = vga_entry(c, color);
 }
+void terminal_newline() {
+	terminal_column = 0;
+	if (++terminal_row == VGA_HEIGHT) {
+		terminal_row = 0;
+	}
+}
 
 void terminal_putchar(char c) {
 	if (c == '\n') {
-		terminal_column = 0;
-		if (++terminal_row == VGA_HEIGHT) {
-			terminal_row = 0;
-		}
+		terminal_newline();
 		return;
 	}
 	terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
 	if (++terminal_column == VGA_WIDTH) {
-		terminal_column = 0;
-		if (++terminal_row == VGA_HEIGHT) {
-			terminal_row = 0;
-		}
+		terminal_newline();
 	}
+	terminal_set_cursor(terminal_column, terminal_row);
 }
 
 void terminal_write(const char* data, size_t size) {
-	for (size_t i = 0; i < size; i++)
+	for (size_t i = 0; i < size; i++) {
 		terminal_putchar(data[i]);
+	}
 }
 
 void terminal_writestring(const char* data) {
 	terminal_write(data, strlen(data));
 }
 
+
+
 void kernel_main(void) {
-	/* Initialize terminal interface */
 	terminal_initialize();
+	terminal_writestring("evren\nsays\nhello\n");
 
-	/* Newline support is left as an exercise. */
-	terminal_writestring("Evren Basladi.\nEsenliker.\n");
-
-
-	for (size_t n = 0; n < 2; ++n) {
-		for (size_t i = 0; i < 10; ++i) {
-			terminal_putchar(((int)'0')+i);
-			terminal_putchar('\n');
-		}
+	for (size_t i = 0; i < 10; ++i) {
+		terminal_putchar(((int)'0')+i);
+		terminal_newline();
 	}
+	terminal_update_cursor();
 }
 
 
