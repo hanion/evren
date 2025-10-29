@@ -6,7 +6,7 @@
 usize terminal_row = 0;
 usize terminal_col = 0;
 TERM_COLOR terminal_color = (TERM_COLOR_LIGHT_GREY | TERM_COLOR_BLACK << 4);
-u16* terminal_buffer = (u16*)VGA_MEMORY;
+volatile u16* terminal_buffer = (u16*)VGA_MEMORY;
 
 usize terminal_get_cursor_row() { return terminal_row; }
 usize terminal_get_cursor_column() { return terminal_col; }
@@ -18,6 +18,7 @@ static inline u16 vga_entry(c8 uc, u8 color) {
 
 
 void terminal_initialize() {
+	terminal_update_cursor();
 	terminal_set_color(TERM_COLOR_LIGHT_GREY, TERM_COLOR_BLACK);
 
 	for (usize y = 0; y < TERMINAL_HEIGHT; y++) {
@@ -50,9 +51,8 @@ void terminal_update_cursor() {
 
 
 
-void terminal_putentryat(c8 c, u8 color, usize x, usize y) {
-	const usize index = y * TERMINAL_WIDTH + x;
-	terminal_buffer[index] = vga_entry(c, color);
+void terminal_put_entry_at(c8 c, TERM_COLOR color, usize x, usize y) {
+	terminal_buffer[y * TERMINAL_WIDTH + x] = vga_entry(c, color);
 }
 
 void terminal_newline() {
@@ -67,7 +67,7 @@ void terminal_putchar(c8 c) {
 		terminal_newline();
 		return;
 	}
-	terminal_putentryat(c, terminal_color, terminal_col, terminal_row);
+	terminal_put_entry_at(c, terminal_color, terminal_col, terminal_row);
 	if (++terminal_col == TERMINAL_WIDTH) {
 		terminal_newline();
 	}
