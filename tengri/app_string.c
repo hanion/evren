@@ -33,7 +33,7 @@ void scroll_msg(Message* msg) {
 }
 
 void AppString_on_ready() {
-	for (uint8_t i = 0; i < MSG_COUNT; ++i) {
+	for (u8 i = 0; i < MSG_COUNT; ++i) {
 		msgs[i].rect.width = renderer_calculate_text_width(msgs[i].string, msgs[i].bold);
 	}
 	msgs[1].rect.x = renderer_calculate_text_width("evren ", false);
@@ -47,14 +47,14 @@ void AppString_on_update(f64 delta_time) {
 
 	if (timer > 0.1) {
 		timer = 0;
-		for (uint8_t i = 0; i < MSG_COUNT; ++i) {
+		for (u8 i = 0; i < MSG_COUNT; ++i) {
 			Message* msg = &msgs[i];
 			scroll_msg(msg);
 		}
 	}
 
 	renderer_clear_back_buffer();
-	for (uint8_t i = 0; i < MSG_COUNT; ++i) {
+	for (u8 i = 0; i < MSG_COUNT; ++i) {
 		Message* msg = &msgs[i];
 		renderer_draw_text(msg->string, msg->rect.x, msg->rect.y, msg->bold);
 	}

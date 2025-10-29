@@ -28,11 +28,11 @@ void terminal_set_color(TERM_COLOR fg, TERM_COLOR bg) {
 	terminal_color = fg | bg << 4;
 }
 
-static inline void outb(uint16_t port, uint8_t val) {
+static inline void outb(u16 port, u8 val) {
 	__asm__ volatile ("outb { %0, %1 | %1, %0 }" : : "a"(val), "Nd"(port));
 }
 void terminal_set_cursor(usize x, usize y) {
-	uint16_t pos = y * TERMINAL_WIDTH + x;
+	u16 pos = y * TERMINAL_WIDTH + x;
 	outb(0x3D4, 0x0E);
 	outb(0x3D5, (pos >> 8) & 0xFF);
 	outb(0x3D4, 0x0F);

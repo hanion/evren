@@ -112,19 +112,6 @@ void renderer_draw_Rect(Rect rect, Color color) {
 	renderer_draw_rect(rect.x, rect.y, rect.width, rect.height, color);
 }
 
-void renderer_draw_number(i32 num, i32 x, i32 y, bool bold);
-void renderer_draw_text(const char *text, i32 x, i32 y, bool bold);
-i32  renderer_calculate_text_width(const char* text, bool bold);
-i32  renderer_calculate_number_width(i32 number, bool bold);
-
-//void renderer_draw_mesh(const Mesh* mesh, const Transform* transform, const Camera* camera);
-//static Vec3 calculate_face_normal(const Vec3* v0, const Vec3* v1, const Vec3* v2);
-//static Vec3 calculate_face_normal(const Vec3* v0, const Vec3* v1, const Vec3* v2, const Vec3* v3);
-
-//void fill_face(const std::vector<Vec4>& vertices, const Index indices[4], const Color& color);
-
-
-
 
 const u8 text_bitmaps[69][5] = {
 	{ 0x7E, 0x11, 0x11, 0x11, 0x7E }, // A
@@ -342,112 +329,6 @@ i32 renderer_calculate_number_width(i32 number, bool bold) {
 }
 
 // TODO: port 3d stuff
-#if 0
-void renderer_draw_mesh(const Mesh& mesh, const Transform& transform, const Camera& camera) {
-	Mat4 transform_matrix = Math::calculate_transform_matrix(&transform);
-	Mat4 transform_proj_matrix = Math::mat4_mul_mat4(&camera.view_projection_matrix, &transform_matrix);
-
-	std::vector<Vec4> transformed_vertices(mesh.vertices.size());
-	std::vector<bool> vertex_valid(mesh.vertices.size(), true);
-
-	for (usize i = 0; i < mesh.vertices.size(); ++i) {
-		Vec4 model_space = { mesh.vertices[i].x, mesh.vertices[i].y, mesh.vertices[i].z, 1.0f };
-
-		transformed_vertices[i] = Math::mat4_mul_vec4_project(&transform_proj_matrix, &model_space);
-
-		// center
-		transformed_vertices[i].x += (float)WIDTH/2.0;
-		transformed_vertices[i].y += (float)HEIGHT/2.0;
-		// flip y
-		transformed_vertices[i].y = (float)HEIGHT - transformed_vertices[i].y;
-		
-		// depth culling
-		if (transformed_vertices[i].z <= -1.0f || transformed_vertices[i].w < 0.0f) {
-			vertex_valid[i] = false;
-			continue;
-		}
-	}
-
-	for (const Face& face : mesh.faces) {
-		if (std::any_of(face.indices, face.indices + 4, [&](Index i) { return !vertex_valid[i]; })) {
-			continue;
-		}
-
-		// backface culling
-		Vec4& v0 = transformed_vertices[face.indices[0]];
-		Vec4& v1 = transformed_vertices[face.indices[1]];
-		Vec4& v2 = transformed_vertices[face.indices[2]];
-		Vec4& v3 = transformed_vertices[face.indices[3]];
-		Vec4 face_centroid = (v0 + v1 + v2 + v3) / 4.0f;
-		Vec3 view_dir = { -face_centroid.x, -face_centroid.y, -face_centroid.z };
-		Vec3 face_normal = calculate_face_normal(v0.vec3(),v1.vec3(),v2.vec3());
-		float dot_product = Math::dot(view_dir, face_normal);
-		if (dot_product > 0) {
-			continue;
-		}
-
-		for (usize i = 0; i < 4; ++i) {
-			const Index& current = face.indices[i];
-			const Index& next = face.indices[(i + 1) % 4];
-
-			const Vec4& a = transformed_vertices[current];
-			const Vec4& b = transformed_vertices[next];
-
-			renderer_draw_line(a.x, a.y, b.x, b.y, face.color);
-		}
-	}
-}
-
-Vec3 renderer_calculate_face_normal(const Vec3& v0, const Vec3& v1, const Vec3& v2) {
-    Vec3 edge1 = v1 - v0;
-    Vec3 edge2 = v2 - v0;
-    return Math::normalize(Math::cross(edge1, edge2));
-}
-
-Vec3 renderer_calculate_face_normal(const Vec3& v0, const Vec3& v1, const Vec3& v2, const Vec3& v3) {
-	Vec3 edge1 = v1 - v0;
-	Vec3 edge2 = v2 - v0;
-	Vec3 edge3 = v3 - v0;
-
-	Vec3 normal1 = Math::normalize(Math::cross(edge1, edge2));
-	Vec3 normal2 = Math::normalize(Math::cross(edge2, edge3));
-
-	return Math::normalize(normal1 + normal2);
-}
-
-
-void renderer_fill_face(const std::vector<Vec4>& vertices, const Index indices[4], const Color& color) {
-	Index sorted_indices[4] = { indices[0], indices[1], indices[2], indices[3] };
-	for (i32 i = 0; i < 4; ++i) {
-		for (i32 j = i + 1; j < 4; ++j) {
-			if (vertices[sorted_indices[i]].y > vertices[sorted_indices[j]].y) {
-				std::swap(sorted_indices[i], sorted_indices[j]);
-			}
-		}
-	}
-
-	for (float y = vertices[sorted_indices[0]].y; y <= vertices[sorted_indices[3]].y; y++) {
-		std::vector<float> x_intersections;
-		for (i32 i = 0; i < 4; ++i) {
-			i32 j = (i + 1) % 4;
-			const Vec4& v1 = vertices[sorted_indices[i]];
-			const Vec4& v2 = vertices[sorted_indices[j]];
-
-			if ((v1.y <= y && v2.y >= y) || (v2.y <= y && v1.y >= y)) {
-				float t = (y - v1.y) / (v2.y - v1.y);
-				float x = v1.x + t * (v2.x - v1.x);
-				x_intersections.push_back(x);
-			}
-		}
-
-		std::sort(x_intersections.begin(), x_intersections.end());
-
-		for (usize i = 0; i < x_intersections.size(); i += 2) {
-			draw_line(x_intersections[i], y, x_intersections[i + 1], y, color);
-		}
-	}
-}
-#endif
 
 
 

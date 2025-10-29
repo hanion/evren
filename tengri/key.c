@@ -24,8 +24,8 @@ b8 is_key_being_pressed(KEY_CODE key) {
 
 
 
-static inline uint8_t inb(uint16_t port) {
-	uint8_t ret;
+static inline u8 inb(u16 port) {
+	u8 ret;
 	__asm__ volatile ( "inb { %1, %0 | %0, %1 }" : "=a"(ret) : "Nd"(port) );
 	return ret;
 }
@@ -37,7 +37,7 @@ KEY_CODE keyboard_poll_scan_code() {
 	}
 }
 void key_poll() {
-	for (int i = 0; i < KEY_STATES_COUNT; i++) {
+	for (i32 i = 0; i < KEY_STATES_COUNT; i++) {
 		if (key_states[i] == KEY_STATE_PRESSED) {
 			key_states[i] = KEY_STATE_HELD;
 		} else if (key_states[i] == KEY_STATE_RELEASED) {
