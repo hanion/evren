@@ -81,11 +81,11 @@ typedef enum {
 
 
 extern KEY_STATE key_states[KEY_STATES_COUNT];
-inline KEY_STATE key_get_state(KEY_CODE key);
-inline b8 is_key_just_pressed (KEY_CODE key);
-inline b8 is_key_held         (KEY_CODE key);
-inline b8 is_key_just_released(KEY_CODE key);
-inline b8 is_key_being_pressed(KEY_CODE key);
+KEY_STATE key_get_state(KEY_CODE key);
+b8 is_key_just_pressed (KEY_CODE key);
+b8 is_key_held         (KEY_CODE key);
+b8 is_key_just_released(KEY_CODE key);
+b8 is_key_being_pressed(KEY_CODE key);
 void key_poll();
 c8 key_code_to_char(KEY_CODE keycode);
 

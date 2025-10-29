@@ -20,13 +20,7 @@ static inline u16 vga_entry(c8 uc, u8 color) {
 void terminal_initialize() {
 	terminal_update_cursor();
 	terminal_set_color(TERM_COLOR_LIGHT_GREY, TERM_COLOR_BLACK);
-
-	for (usize y = 0; y < TERMINAL_HEIGHT; y++) {
-		for (usize x = 0; x < TERMINAL_WIDTH; x++) {
-			const usize index = y * TERMINAL_WIDTH + x;
-			terminal_buffer[index] = vga_entry(' ', terminal_color);
-		}
-	}
+	terminal_clear();
 }
 
 
@@ -51,8 +45,8 @@ void terminal_update_cursor() {
 
 
 
-void terminal_put_entry_at(c8 c, TERM_COLOR color, usize x, usize y) {
-	terminal_buffer[y * TERMINAL_WIDTH + x] = vga_entry(c, color);
+void terminal_put_entry_at(c8 entry, TERM_COLOR color, usize x, usize y) {
+	terminal_buffer[y * TERMINAL_WIDTH + x] = vga_entry(entry, color);
 }
 
 void terminal_newline() {
@@ -92,7 +86,11 @@ void terminal_write_cstr(const char* str) {
 
 
 void terminal_clear() {
-	// TODO: implement
+	for (usize y = 0; y < TERMINAL_HEIGHT; y++) {
+		for (usize x = 0; x < TERMINAL_WIDTH; x++) {
+			terminal_buffer[y * TERMINAL_WIDTH + x] = vga_entry(' ', terminal_color);
+		}
+	}
 }
 void terminal_scroll() {
 	// TODO: implement

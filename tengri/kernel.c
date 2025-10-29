@@ -2,16 +2,36 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "key.h"
-#include "terminal.h"
-
 #include "key.c"
 #include "terminal.c"
+
+#include "ee.c"
+#include "app_tetris.c"
+#include "app_string.c"
 
 
 static void sleep_cycles(u32 cycles) {
 	for (volatile u32 i = 0; i < cycles; i++);
 }
+
+
+#define EE_APP_COUNT 2
+EE_Application ee_apps[EE_APP_COUNT] = {
+	(EE_Application){
+		.name = "string",
+		.on_ready =  AppString_on_ready,
+		.on_event =  AppString_on_event,
+		.on_update = AppString_on_update,
+	},
+	(EE_Application){
+		.name = "tetris",
+		.on_ready =  AppTetris_on_ready,
+		.on_event =  AppTetris_on_event,
+		.on_update = AppTetris_on_update,
+	}
+};
+i8 ee_app_current = 1;
+
 
 void kernel_main(void) {
 	terminal_initialize();
@@ -19,26 +39,24 @@ void kernel_main(void) {
 	terminal_update_cursor();
 
 	while (1) {
+		EE_Application* app = &ee_apps[ee_app_current];
+		if(!app->is_ready) {
+			app->on_ready();
+			app->is_ready = true;
+		}
+
 		key_poll();
-
-		if (is_key_just_pressed(KEY_ENTER)) {
-			terminal_putchar('\n');
-			terminal_update_cursor();
+		if (is_key_just_pressed(KEY_TAB)) {
+			ee_app_current = (ee_app_current+1) % EE_APP_COUNT;
+			continue;
 		}
 
-		if (is_key_just_pressed(KEY_A)) {
-			terminal_putchar('a');
-		} else if (is_key_held(KEY_A)) {
-			terminal_putchar(' ');
-		} else if (is_key_just_released(KEY_A)) {
-			terminal_putchar('_');
-		}
+		app->on_event();
+		app->on_update(0.05);
 
-		if (is_key_being_pressed(KEY_S)) {
-			terminal_putchar('s');
-		}
-
-		sleep_cycles(1000000);
+		renderer_swap_buffers();
+		platform_render_front_buffer();
+		sleep_cycles(10000000);
 	}
 }
 

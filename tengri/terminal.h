@@ -35,6 +35,8 @@ void terminal_update_cursor();
 usize terminal_get_cursor_row();
 usize terminal_get_cursor_column();
 
+void terminal_put_entry_at(c8 entry, TERM_COLOR color, usize x, usize y);
+
 void terminal_putchar(c8 c);
 void terminal_write(const c8* data, usize size);
 void terminal_write_cstr(const char* str);
